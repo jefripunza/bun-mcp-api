@@ -8,6 +8,7 @@ import { ErrorRequest } from "../../types/error";
 export async function createAgent(
   credential: RequestChatCredential,
   mcpServers: string[],
+  systemPrompt?: string,
 ) {
   const AgentState = Annotation.Root({
     input: Annotation<string>(),
@@ -32,10 +33,17 @@ export async function createAgent(
 
     // 1️⃣ LLM
     .addNode("agent", async (state) => {
-      const response = await llm.invoke([
-        ...state.messages,
-        { role: "user", content: state.input },
-      ]);
+      const messages: any[] = [];
+
+      // Add system prompt if provided and no messages yet
+      if (systemPrompt && state.messages.length === 0) {
+        messages.push({ role: "system", content: systemPrompt });
+      }
+
+      messages.push(...state.messages);
+      messages.push({ role: "user", content: state.input });
+
+      const response = await llm.invoke(messages);
 
       return { messages: [response] };
     })

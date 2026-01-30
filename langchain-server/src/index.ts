@@ -21,7 +21,8 @@ app.use(morgan("dev"));
 
 app.post("/chat", async (req, res) => {
   try {
-    const { credential, input, servers } = req.body as RequestChatBody;
+    const { credential, system_prompt, input, servers } =
+      req.body as RequestChatBody;
     if (!credential) {
       throw new ErrorRequest("Missing credential", 401);
     }
@@ -55,6 +56,7 @@ app.post("/chat", async (req, res) => {
     const agent = (await createAgent(
       credential,
       availableServers,
+      system_prompt,
     )) as CompiledAgent;
     const result = await agent.invoke({ input });
     const messages = result.messages;
