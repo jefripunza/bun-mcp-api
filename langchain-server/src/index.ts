@@ -7,6 +7,7 @@ import { checkServers, createAgent } from "./agent";
 import type { CompiledAgent } from "../../types/agent";
 import type { RequestChatBody } from "../../types/request";
 import type { Message } from "@langchain/core/messages";
+import { ErrorRequest } from "../../types/error";
 
 const app = express();
 app.use(cors());
@@ -22,32 +23,32 @@ app.post("/chat", async (req, res) => {
   try {
     const { credential, input, servers } = req.body as RequestChatBody;
     if (!credential) {
-      return res.status(400).json({ error: "Missing credential" });
+      throw new ErrorRequest("Missing credential", 401);
     }
     if (typeof credential.provider !== "string") {
-      return res.status(400).json({ error: "Invalid provider" });
+      throw new ErrorRequest("Invalid provider");
     }
     if (!credential.provider) {
-      return res.status(400).json({ error: "Missing provider" });
+      throw new ErrorRequest("Missing provider");
     }
     if (
       ["openai", "claude", "openrouter"].includes(credential.provider) &&
       !credential.api_key
     ) {
-      return res.status(400).json({ error: "Missing api key" });
+      throw new ErrorRequest("Missing api key", 401);
     }
     if (
       ["ollama", "llama_cpp", "vllm"].includes(credential.provider) &&
       !credential.url
     ) {
-      return res.status(400).json({ error: "Missing url" });
+      throw new ErrorRequest("Missing url", 401);
     }
 
     if (!input) {
-      return res.status(400).json({ error: "Missing body request" });
+      throw new ErrorRequest("Missing body request");
     }
     if (!servers || servers.length === 0) {
-      return res.status(400).json({ error: "No MCP servers provided" });
+      throw new ErrorRequest("No MCP servers provided");
     }
 
     const availableServers = await checkServers(servers);
@@ -61,10 +62,10 @@ app.post("/chat", async (req, res) => {
     result.message = (last_message as unknown as Message)?.content as string;
     return res.json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    if (message.includes("Unsupported provider")) {
-      return res.status(400).json({ error: message });
+    if (err instanceof ErrorRequest) {
+      return res.status(err.code).json({ error: err.message });
     }
+    const message = err instanceof Error ? err.message : "Unknown error";
     return res.status(500).json({ error: message });
   }
 });

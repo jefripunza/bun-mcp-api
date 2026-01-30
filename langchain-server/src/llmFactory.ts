@@ -1,5 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import type { RequestChatCredential } from "../../types/request";
+import { ErrorRequest } from "../../types/error";
 
 const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
@@ -37,11 +38,11 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
 
   switch (provider) {
     case "openai":
-      if (!api_key) throw new Error("OpenAI API key is required");
+      if (!api_key) throw new ErrorRequest("OpenAI API key is required", 401);
       return new ChatOpenAI(baseConfig);
 
     case "claude":
-      if (!api_key) throw new Error("Claude API key is required");
+      if (!api_key) throw new ErrorRequest("Claude API key is required", 401);
       return new ChatOpenAI({
         ...baseConfig,
         configuration: {
@@ -50,7 +51,8 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
       });
 
     case "openrouter":
-      if (!api_key) throw new Error("OpenRouter API key is required");
+      if (!api_key)
+        throw new ErrorRequest("OpenRouter API key is required", 401);
       return new ChatOpenAI({
         ...baseConfig,
         configuration: {
@@ -59,7 +61,7 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
       });
 
     case "ollama":
-      if (!url) throw new Error("Ollama URL is required");
+      if (!url) throw new ErrorRequest("Ollama URL is required");
       return new ChatOpenAI({
         ...baseConfig,
         apiKey: "ollama",
@@ -69,7 +71,7 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
       });
 
     case "llama_cpp":
-      if (!url) throw new Error("Llama.cpp URL is required");
+      if (!url) throw new ErrorRequest("Llama.cpp URL is required");
       return new ChatOpenAI({
         ...baseConfig,
         apiKey: "llama_cpp",
@@ -79,7 +81,7 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
       });
 
     case "vllm":
-      if (!url) throw new Error("vLLM URL is required");
+      if (!url) throw new ErrorRequest("vLLM URL is required");
       return new ChatOpenAI({
         ...baseConfig,
         apiKey: "vllm",
@@ -89,6 +91,6 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
       });
 
     default:
-      throw new Error(`Unsupported provider: ${provider}`);
+      throw new ErrorRequest(`Unsupported provider: ${provider}`, 404);
   }
 }

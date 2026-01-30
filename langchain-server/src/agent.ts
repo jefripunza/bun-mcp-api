@@ -3,6 +3,7 @@ import { loadMcpTools } from "./mcpLoader";
 import axios from "axios";
 import type { RequestChatCredential } from "../../types/request";
 import { createLLM } from "./llmFactory";
+import { ErrorRequest } from "../../types/error";
 
 export async function createAgent(
   credential: RequestChatCredential,
@@ -49,7 +50,7 @@ export async function createAgent(
       const toolMessages = await Promise.all(
         toolCalls.map(async (call: any) => {
           const tool = toolMap.get(call.name);
-          if (!tool) throw new Error(`Tool not found: ${call.name}`);
+          if (!tool) throw new ErrorRequest(`Tool not found: ${call.name}`, 404);
 
           // @ts-ignore
           const result = await tool.func(call.args);
