@@ -110,7 +110,9 @@ async function main() {
   // Pastikan folder output ada
   await mkdir(OUTPUT_DIR, { recursive: true });
 
+  let i = 0;
   for (const item of prompts) {
+    i++;
     console.log(`▶ Running: ${item.name}`);
 
     const res = await fetch(API_URL, {
@@ -126,7 +128,7 @@ async function main() {
 
     const result = await res.json();
 
-    const filePath = path.join(OUTPUT_DIR, `${item.name}.txt`);
+    const filePath = path.join(OUTPUT_DIR, `${i}-${item.name}.txt`);
     await writeFile(filePath, result.message, "utf-8");
 
     console.log(`✔ Saved: ${filePath}`);
