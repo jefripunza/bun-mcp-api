@@ -3,16 +3,16 @@ import { StateGraph, Annotation } from "@langchain/langgraph";
 import { loadMcpTools } from "./mcpLoader";
 import { OPENAI_API_KEY } from "./environment";
 
-const AgentState = Annotation.Root({
-  input: Annotation<string>(),
-
-  messages: Annotation<any[]>({
-    value: (x, y) => x.concat(y),
-    default: () => [],
-  }),
-});
-
 export async function createAgent() {
+  const AgentState = Annotation.Root({
+    input: Annotation<string>(),
+
+    messages: Annotation<any[]>({
+      value: (x, y) => x.concat(y),
+      default: () => [],
+    }),
+  });
+
   const tools = await loadMcpTools();
 
   // map biar gampang lookup
@@ -39,25 +39,29 @@ export async function createAgent() {
     // 2️⃣ Execute MCP tool MANUAL
     .addNode("tools", async (state) => {
       const last = state.messages.at(-1);
-      const call = last.tool_calls?.[0];
+      const toolCalls = last.tool_calls || [];
 
-      if (!call) return {};
+      if (toolCalls.length === 0) return {};
 
-      const tool = toolMap.get(call.name);
-      if (!tool) throw new Error(`Tool not found: ${call.name}`);
+      const toolMessages = await Promise.all(
+        toolCalls.map(async (call: any) => {
+          const tool = toolMap.get(call.name);
+          if (!tool) throw new Error(`Tool not found: ${call.name}`);
 
-      // @ts-ignore
-      const result = await tool.func(call.args);
+          // @ts-ignore
+          const result = await tool.func(call.args);
 
-      return {
-        messages: [
-          {
+          return {
             role: "tool",
             tool_call_id: call.id,
             name: call.name,
             content: JSON.stringify(result),
-          },
-        ],
+          };
+        }),
+      );
+
+      return {
+        messages: toolMessages,
       };
     })
 

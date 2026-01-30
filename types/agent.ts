@@ -64,6 +64,7 @@ export type Message = AIMessage | ToolMessage;
 export interface AgentState {
   input: string;
   messages: Message[];
+  message?: string;
 }
 
 export interface CompiledAgent {
