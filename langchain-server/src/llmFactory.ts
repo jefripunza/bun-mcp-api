@@ -1,9 +1,7 @@
 import { ChatOpenAI, type ChatOpenAIFields } from "@langchain/openai";
 import { ChatOllama } from "@langchain/ollama";
-import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
 import type { RequestChatCredential } from "../../types/request";
 import { ErrorRequest } from "../../types/error";
-import { ChatOllamaLlamaCpp } from "./extra";
 
 const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
@@ -16,7 +14,7 @@ const DEFAULT_MODELS = {
 
 export function createLLM(
   credential: RequestChatCredential,
-): ChatOpenAI | ChatOllama | ChatOllamaLlamaCpp {
+): ChatOpenAI | ChatOllama {
   const { provider, api_key, url, model, set } = credential;
 
   // Get model: use custom model or default for provider
@@ -73,9 +71,12 @@ export function createLLM(
 
     case "llama_cpp":
       if (!url) throw new ErrorRequest("Llama.cpp URL is required");
-      return new ChatOllamaLlamaCpp({
+      return new ChatOpenAI({
         ...baseConfig,
-        baseUrl: url,
+        apiKey: "llama_cpp", // dummy key, llama.cpp doesn't need auth
+        configuration: {
+          baseURL: url,
+        },
       });
 
     case "vllm":

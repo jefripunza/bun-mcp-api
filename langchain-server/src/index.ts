@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -19,38 +19,45 @@ app.listen(6000, () => {
 });
 app.use(morgan("dev"));
 
+const requestChatBody = (req: Request) => {
+  const { credential, system_prompt, input, servers } =
+    req.body as RequestChatBody;
+
+  if (!credential) {
+    throw new ErrorRequest("Missing credential", 401);
+  }
+  if (typeof credential.provider !== "string") {
+    throw new ErrorRequest("Invalid provider");
+  }
+  if (!credential.provider) {
+    throw new ErrorRequest("Missing provider");
+  }
+  if (
+    ["openai", "claude", "openrouter"].includes(credential.provider) &&
+    !credential.api_key
+  ) {
+    throw new ErrorRequest("Missing api key", 401);
+  }
+  if (
+    ["ollama", "llama_cpp", "vllm"].includes(credential.provider) &&
+    !credential.url
+  ) {
+    throw new ErrorRequest("Missing url", 401);
+  }
+
+  if (!input) {
+    throw new ErrorRequest("Missing body request");
+  }
+  if (!servers || servers.length === 0) {
+    throw new ErrorRequest("No MCP servers provided");
+  }
+
+  return { credential, system_prompt, input, servers };
+};
+
 app.post("/chat", async (req, res) => {
   try {
-    const { credential, system_prompt, input, servers } =
-      req.body as RequestChatBody;
-    if (!credential) {
-      throw new ErrorRequest("Missing credential", 401);
-    }
-    if (typeof credential.provider !== "string") {
-      throw new ErrorRequest("Invalid provider");
-    }
-    if (!credential.provider) {
-      throw new ErrorRequest("Missing provider");
-    }
-    if (
-      ["openai", "claude", "openrouter"].includes(credential.provider) &&
-      !credential.api_key
-    ) {
-      throw new ErrorRequest("Missing api key", 401);
-    }
-    if (
-      ["ollama", "llama_cpp", "vllm"].includes(credential.provider) &&
-      !credential.url
-    ) {
-      throw new ErrorRequest("Missing url", 401);
-    }
-
-    if (!input) {
-      throw new ErrorRequest("Missing body request");
-    }
-    if (!servers || servers.length === 0) {
-      throw new ErrorRequest("No MCP servers provided");
-    }
+    const { credential, system_prompt, input, servers } = requestChatBody(req);
 
     const availableServers = await checkServers(servers);
     const agent = (await createAgent(

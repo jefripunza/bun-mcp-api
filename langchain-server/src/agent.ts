@@ -24,10 +24,19 @@ export async function createAgent(
   // map biar gampang lookup
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
+  // Providers yang support native function calling
+  const TOOL_CALLING_PROVIDERS = ["openai", "claude", "openrouter"];
+  const supportsToolCalling = TOOL_CALLING_PROVIDERS.includes(
+    credential.provider,
+  );
+
   // Inisialisasi LLM berdasarkan provider yang dipilih
-  const llm = createLLM(credential).bindTools(tools);
-  
-  console.log(`🤖 Using LLM provider: ${credential.provider}`);
+  const baseLLM = createLLM(credential);
+  const llm = supportsToolCalling ? baseLLM.bindTools(tools) : baseLLM;
+
+  console.log(
+    `🤖 Using LLM provider: ${credential.provider} ${supportsToolCalling ? "(with native tool calling)" : "(with manual tool calling)"}`,
+  );
 
   const graph = new StateGraph(AgentState)
 
@@ -40,10 +49,81 @@ export async function createAgent(
         messages.push({ role: "system", content: systemPrompt });
       }
 
+      // For non-tool-calling providers, inject tool descriptions
+      if (!supportsToolCalling && state.messages.length === 0) {
+        const toolDescriptions = tools
+          .map(
+            (t: any) => {
+              const params = Object.entries(t.schema?.shape || {})
+                .map(([key, val]: any) => `${key}: ${val._def?.typeName || 'any'}`)
+                .join(", ");
+              return `- ${t.name}(${params}): ${t.description}`;
+            },
+          )
+          .join("\n");
+
+        const reactPrompt = `You have access to the following tools:
+
+${toolDescriptions}
+
+To use a tool, you MUST respond with ONLY a JSON object in this EXACT format:
+{"tool_name": "name_of_tool", "tool_args": {"param1": "value1", "param2": value2}}
+
+Do NOT add any explanation before or after the JSON. Just output the JSON.
+
+If you don't need a tool, respond normally to the user's question.`;
+
+        messages.push({ role: "system", content: reactPrompt });
+      }
+
       messages.push(...state.messages);
       messages.push({ role: "user", content: state.input });
 
       const response = await llm.invoke(messages);
+
+      // For non-tool-calling providers, parse manual tool calls from response
+      if (!supportsToolCalling && response.content) {
+        const content = response.content.toString().trim();
+        
+        // Pattern 1: Standard format {"tool_name": "...", "tool_args": {...}}
+        let jsonMatch = content.match(/\{\s*"tool_name"\s*:\s*"([^"]+)"\s*,\s*"tool_args"\s*:\s*(\{[^}]*\})\s*\}/);
+        
+        // Pattern 2: Model custom format: to=tool.name json\n{...}
+        if (!jsonMatch) {
+          const customMatch = content.match(/to=(?:tool\.)?(\w+)\s+json\s*\n?\s*(\{[^}]+\})/);
+          if (customMatch && customMatch[1] && customMatch[2]) {
+            jsonMatch = ["", customMatch[1], customMatch[2]] as RegExpMatchArray;
+          }
+        }
+        
+        if (jsonMatch && jsonMatch[1] && jsonMatch[2]) {
+          const toolName = jsonMatch[1];
+          let argsStr = jsonMatch[2];
+          
+          try {
+            const args = JSON.parse(argsStr);
+            // Convert string numbers to actual numbers if needed
+            Object.keys(args).forEach(key => {
+              if (typeof args[key] === 'string' && !isNaN(Number(args[key]))) {
+                args[key] = Number(args[key]);
+              }
+            });
+            
+            // Inject tool_calls manually for agent to process
+            response.tool_calls = [
+              {
+                name: toolName,
+                args: args,
+                id: `manual_${Date.now()}`,
+                type: "tool_call",
+              },
+            ];
+            console.log(`🔧 Manual tool call detected: ${toolName}`, args);
+          } catch (e) {
+            console.error("Failed to parse manual tool call:", e);
+          }
+        }
+      }
 
       return { messages: [response] };
     })
