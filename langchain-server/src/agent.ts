@@ -1,9 +1,8 @@
-import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, Annotation } from "@langchain/langgraph";
 import { loadMcpTools } from "./mcpLoader";
-import { OPENAI_API_KEY } from "./environment";
 import axios from "axios";
 import type { RequestChatCredential } from "../../types/request";
+import { createLLM } from "./llmFactory";
 
 export async function createAgent(
   credential: RequestChatCredential,
@@ -23,11 +22,10 @@ export async function createAgent(
   // map biar gampang lookup
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
-  const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
-    temperature: 0,
-    apiKey: OPENAI_API_KEY,
-  }).bindTools(tools);
+  // Inisialisasi LLM berdasarkan provider yang dipilih
+  const llm = createLLM(credential).bindTools(tools);
+  
+  console.log(`🤖 Using LLM provider: ${credential.provider}`);
 
   const graph = new StateGraph(AgentState)
 
