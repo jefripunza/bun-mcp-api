@@ -77,6 +77,22 @@ export function createLLM(
         configuration: {
           baseURL: url,
         },
+        // verbose: true, // Enable verbose logging for debugging
+        // callbacks: [
+        //   {
+        //     handleLLMStart: async (llm, prompts) => {
+        //       console.log("🚀 [llama_cpp] LLM Start");
+        //       console.log("📝 Prompts:", JSON.stringify(prompts, null, 2));
+        //     },
+        //     handleLLMEnd: async (output) => {
+        //       console.log("✅ [llama_cpp] LLM End");
+        //       console.log("📤 Output:", JSON.stringify(output, null, 2));
+        //     },
+        //     handleLLMError: async (error) => {
+        //       console.error("❌ [llama_cpp] LLM Error:", error);
+        //     },
+        //   },
+        // ],
       });
 
     case "vllm":
