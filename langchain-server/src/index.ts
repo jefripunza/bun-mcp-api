@@ -18,9 +18,11 @@ app.listen(6000, () => {
 app.use(morgan("dev"));
 
 app.post("/chat", async (req, res) => {
-  const agent = (await createAgent()) as CompiledAgent;
-
-  const { input } = req.body;
+  const { input, mcpServers } = req.body as {
+    input: string;
+    mcpServers: string[];
+  };
+  const agent = (await createAgent(mcpServers)) as CompiledAgent;
   const result = await agent.invoke({ input });
   const messages = result.messages;
   const last_message = messages.at(-1);

@@ -3,7 +3,7 @@ import { StateGraph, Annotation } from "@langchain/langgraph";
 import { loadMcpTools } from "./mcpLoader";
 import { OPENAI_API_KEY } from "./environment";
 
-export async function createAgent() {
+export async function createAgent(mcpServers: string[]) {
   const AgentState = Annotation.Root({
     input: Annotation<string>(),
 
@@ -13,7 +13,7 @@ export async function createAgent() {
     }),
   });
 
-  const tools = await loadMcpTools();
+  const tools = await loadMcpTools(mcpServers);
 
   // map biar gampang lookup
   const toolMap = new Map(tools.map((t) => [t.name, t]));

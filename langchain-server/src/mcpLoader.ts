@@ -5,7 +5,7 @@ import { type Tool } from "../../types/tool";
 
 const MCP_URL = "http://localhost:4000";
 
-export async function loadMcpTools() {
+export async function loadMcpTools(mcpServers: string[]) {
   const { data } = await axios.get<Tool[]>(`${MCP_URL}/mcp/tools`);
 
   return data.map((tool: any) => {

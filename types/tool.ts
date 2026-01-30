@@ -15,4 +15,6 @@ export interface ToolParameter {
 
 export interface ToolParameterProperty {
   type: ParameterType;
+  description?: string;
+  enum?: string[];
 }
