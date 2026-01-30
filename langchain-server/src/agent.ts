@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, Annotation } from "@langchain/langgraph";
 import { loadMcpTools } from "./mcpLoader";
 import { OPENAI_API_KEY } from "./environment";
+import axios from "axios";
 
 export async function createAgent(mcpServers: string[]) {
   const AgentState = Annotation.Root({
@@ -77,3 +78,26 @@ export async function createAgent(mcpServers: string[]) {
 
   return graph.compile();
 }
+
+export const checkServers = async (mcpServers: string[]): Promise<string[]> => {
+  const availableServers: string[] = [];
+
+  for (const serverUrl of mcpServers) {
+    try {
+      const response = await axios.get(`${serverUrl}/health`, {
+        timeout: 5000,
+      });
+
+      if (response.status === 200) {
+        availableServers.push(serverUrl);
+        console.log(`✅ MCP Server ${serverUrl} is healthy`);
+      } else {
+        console.warn(`⚠️  MCP Server ${serverUrl} returned status ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`❌ MCP Server ${serverUrl} is not available:`, error instanceof Error ? error.message : error);
+    }
+  }
+
+  return availableServers;
+};

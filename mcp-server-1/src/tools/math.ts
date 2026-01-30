@@ -13,6 +13,7 @@ export const mathTools: Tool[] = [
       required: ["a", "b"],
     },
     handler: async ({ a, b }: { a: number; b: number }) => {
+      console.log(`✅ MCP1 Math: ${a}+${b}=${a + b}`);
       return { result: a + b };
     },
   },

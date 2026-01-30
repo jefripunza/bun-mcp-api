@@ -16,6 +16,11 @@ export const datetimeTools: Tool[] = [
     },
     handler: async ({ timezone = "Asia/Jakarta" }: { timezone?: string }) => {
       const now = new Date();
+      console.log(
+        `✅ MCP2 DateTime: ${now.toLocaleString("id-ID", {
+          timeZone: timezone,
+        })}`,
+      );
       return {
         iso: now.toISOString(),
         timestamp: now.getTime(),
@@ -50,6 +55,7 @@ export const datetimeTools: Tool[] = [
         age--;
       }
 
+      console.log(`✅ MCP2 DateTime: ${age} years old`);
       return {
         age,
         birthdate,
@@ -83,6 +89,9 @@ export const datetimeTools: Tool[] = [
       const targetDate = new Date(date);
       targetDate.setDate(targetDate.getDate() + days);
 
+      console.log(
+        `✅ MCP2 DateTime: ${targetDate.toLocaleDateString("id-ID")}`,
+      );
       return {
         original_date: date,
         days_added: days,
@@ -125,6 +134,7 @@ export const datetimeTools: Tool[] = [
         "Saturday",
       ];
 
+      console.log(`✅ MCP2 DateTime: ${days[targetDate.getDay()]}`);
       return {
         date,
         day_name_id: days[targetDate.getDay()],

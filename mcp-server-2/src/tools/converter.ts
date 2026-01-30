@@ -13,6 +13,7 @@ export const converterTools: Tool[] = [
     },
     handler: async ({ celsius }: { celsius: number }) => {
       const fahrenheit = (celsius * 9) / 5 + 32;
+      console.log(`✅ MCP2 Converter c2f: ${celsius}C -> ${fahrenheit}F`);
       return {
         celsius,
         fahrenheit,
@@ -32,6 +33,7 @@ export const converterTools: Tool[] = [
     },
     handler: async ({ fahrenheit }: { fahrenheit: number }) => {
       const celsius = ((fahrenheit - 32) * 5) / 9;
+      console.log(`✅ MCP2 Converter f2c: ${fahrenheit}F -> ${celsius}C`);
       return {
         fahrenheit,
         celsius,
@@ -50,6 +52,7 @@ export const converterTools: Tool[] = [
       required: ["km"],
     },
     handler: async ({ km }: { km: number }) => {
+      console.log(`✅ MCP2 Converter km2mil: ${km}km -> ${km * 0.621371}mil`);
       return {
         km,
         miles: km * 0.621371,
@@ -69,6 +72,9 @@ export const converterTools: Tool[] = [
       required: ["miles"],
     },
     handler: async ({ miles }: { miles: number }) => {
+      console.log(
+        `✅ MCP2 Converter mil2km: ${miles}mil -> ${miles * 1.60934}km`,
+      );
       return {
         miles,
         km: miles * 1.60934,
@@ -88,6 +94,7 @@ export const converterTools: Tool[] = [
       required: ["kg"],
     },
     handler: async ({ kg }: { kg: number }) => {
+      console.log(`✅ MCP2 Converter kg2lb: ${kg}kg -> ${kg * 2.20462}lb`);
       return {
         kg,
         pounds: kg * 2.20462,
@@ -107,6 +114,9 @@ export const converterTools: Tool[] = [
       required: ["pounds"],
     },
     handler: async ({ pounds }: { pounds: number }) => {
+      console.log(
+        `✅ MCP2 Converter lb2kg: ${pounds}lb -> ${pounds * 0.453592}kg`,
+      );
       return {
         pounds,
         kg: pounds * 0.453592,

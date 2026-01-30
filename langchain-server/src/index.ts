@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import { createAgent } from "./agent";
+import { checkServers, createAgent } from "./agent";
 import type { CompiledAgent } from "../../types/agent";
 import type { Message } from "@langchain/core/messages";
 
@@ -18,14 +18,22 @@ app.listen(6000, () => {
 app.use(morgan("dev"));
 
 app.post("/chat", async (req, res) => {
-  const { input, mcpServers } = req.body as {
+  const { input, servers } = req.body as {
     input: string;
-    mcpServers: string[];
+    servers: string[];
   };
-  const agent = (await createAgent(mcpServers)) as CompiledAgent;
+  if (!input) {
+    return res.status(400).json({ error: "Missing body request" });
+  }
+  if (!servers || servers.length === 0) {
+    return res.status(400).json({ error: "No MCP servers provided" });
+  }
+
+  const availableServers = await checkServers(servers);
+  const agent = (await createAgent(availableServers)) as CompiledAgent;
   const result = await agent.invoke({ input });
   const messages = result.messages;
   const last_message = messages.at(-1);
   result.message = (last_message as unknown as Message)?.content as string;
-  res.json(result);
+  return res.json(result);
 });

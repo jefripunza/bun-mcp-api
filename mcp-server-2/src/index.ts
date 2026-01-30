@@ -14,6 +14,7 @@ app.listen(4040, () => {
   console.log("🧠 MCP Server running on http://localhost:4040");
 });
 app.use(morgan("dev"));
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // MCP-style: list tools
 app.get("/mcp/tools", (_req, res) => {

@@ -74,6 +74,7 @@ export const weatherTools: Tool[] = [
         },
       };
 
+      console.log(`✅ MCP1 Weather: ${city}`);
       return {
         city,
         latitude,
