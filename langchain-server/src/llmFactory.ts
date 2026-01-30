@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, type ChatOpenAIFields } from "@langchain/openai";
 import type { RequestChatCredential } from "../../types/request";
 import { ErrorRequest } from "../../types/error";
 
@@ -18,7 +18,7 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
   const selectedModel = model || DEFAULT_MODELS[provider];
 
   // Build base config with optional settings
-  const baseConfig: any = {
+  const baseConfig: ChatOpenAIFields = {
     model: selectedModel,
     temperature: set?.temperature ?? 0,
     apiKey: api_key || "default",
@@ -32,7 +32,6 @@ export function createLLM(credential: RequestChatCredential): ChatOpenAI {
   if (set?.presence_penalty !== undefined)
     baseConfig.presencePenalty = set.presence_penalty;
   if (set?.stop) baseConfig.stop = set.stop;
-  if (set?.seed !== undefined) baseConfig.seed = set.seed;
   if (set?.timeout) baseConfig.timeout = set.timeout;
   if (set?.max_retries !== undefined) baseConfig.maxRetries = set.max_retries;
 

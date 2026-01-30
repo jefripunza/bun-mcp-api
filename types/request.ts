@@ -1,5 +1,6 @@
 export interface RequestChatBody {
   credential: RequestChatCredential;
+  system_prompt?: string;
   input: string;
   servers: string[];
 }
@@ -19,7 +20,6 @@ export interface SetLlm {
   frequency_penalty?: number; // -2.0 - 2.0, penalize frequent tokens
   presence_penalty?: number; // -2.0 - 2.0, penalize repeated tokens
   stop?: string[]; // Stop sequences
-  seed?: number; // For deterministic outputs
   timeout?: number; // Request timeout in ms
   max_retries?: number; // Number of retries on failure
 }
