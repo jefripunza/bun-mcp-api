@@ -17,13 +17,14 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@langchain/ollama": "^1.2.1",
     "@langchain/openai": "^1.2.3",
     "axios": "^1.13.4",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
-    "langchain": "^1.2.15",
+    "langchain": "0.3.0",
     "morgan": "^1.10.1",
     "zod": "^4.3.6"
   }
