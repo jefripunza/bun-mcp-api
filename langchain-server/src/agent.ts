@@ -3,8 +3,12 @@ import { StateGraph, Annotation } from "@langchain/langgraph";
 import { loadMcpTools } from "./mcpLoader";
 import { OPENAI_API_KEY } from "./environment";
 import axios from "axios";
+import type { RequestChatCredential } from "../../types/request";
 
-export async function createAgent(mcpServers: string[]) {
+export async function createAgent(
+  credential: RequestChatCredential,
+  mcpServers: string[],
+) {
   const AgentState = Annotation.Root({
     input: Annotation<string>(),
 
@@ -92,10 +96,15 @@ export const checkServers = async (mcpServers: string[]): Promise<string[]> => {
         availableServers.push(serverUrl);
         console.log(`✅ MCP Server ${serverUrl} is healthy`);
       } else {
-        console.warn(`⚠️  MCP Server ${serverUrl} returned status ${response.status}`);
+        console.warn(
+          `⚠️  MCP Server ${serverUrl} returned status ${response.status}`,
+        );
       }
     } catch (error) {
-      console.error(`❌ MCP Server ${serverUrl} is not available:`, error instanceof Error ? error.message : error);
+      console.error(
+        `❌ MCP Server ${serverUrl} is not available:`,
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 

@@ -3,20 +3,16 @@ import { WeatherApiResponse } from "@openmeteo/sdk/weather-api-response";
 
 import type { Tool } from "../../../types/tool";
 
-const params = {
-  latitude: -6.1818,
-  longitude: 106.8223,
-  hourly: [
-    "temperature_2m",
-    "relative_humidity_2m",
-    "rain",
-    "wind_speed_10m",
-    "wind_direction_10m",
-    "soil_temperature_0cm",
-    "soil_moisture_0_to_1cm",
-  ],
-  timezone: "auto",
-};
+const parameters = [
+  "temperature_2m",
+  "relative_humidity_2m",
+  "rain",
+  "wind_speed_10m",
+  "wind_direction_10m",
+  "soil_temperature_0cm",
+  "soil_moisture_0_to_1cm",
+];
+
 const url = "https://api.open-meteo.com/v1/forecast";
 
 export const weatherTools: Tool[] = [
@@ -26,11 +22,24 @@ export const weatherTools: Tool[] = [
     parameters: {
       type: "object",
       properties: {
-        city: { type: "string" },
+        latitude: { type: "number" },
+        longitude: { type: "number" },
       },
-      required: ["city"],
+      required: ["latitude", "longitude"],
     },
-    handler: async ({ city }: { city: string }) => {
+    handler: async ({
+      latitude,
+      longitude,
+    }: {
+      latitude: number;
+      longitude: number;
+    }) => {
+      const params = {
+        latitude,
+        longitude,
+        hourly: parameters,
+        timezone: "auto",
+      };
       const responses = await fetchWeatherApi(url, params);
       if (!responses) throw new Error("Failed to fetch weather");
 
@@ -38,8 +47,6 @@ export const weatherTools: Tool[] = [
       const response = responses[0] as WeatherApiResponse;
 
       // Attributes for timezone and location
-      const latitude = response.latitude();
-      const longitude = response.longitude();
       const elevation = response.elevation();
       const timezone = response.timezone();
       const timezoneAbbreviation = response.timezoneAbbreviation();
@@ -74,9 +81,8 @@ export const weatherTools: Tool[] = [
         },
       };
 
-      console.log(`✅ MCP1 Weather: ${city}`);
+      console.log(`✅ MCP1 Weather: ${latitude}, ${longitude}`);
       return {
-        city,
         latitude,
         longitude,
         elevation,

@@ -5,6 +5,7 @@ import morgan from "morgan";
 
 import { checkServers, createAgent } from "./agent";
 import type { CompiledAgent } from "../../types/agent";
+import type { RequestChatBody } from "../../types/request";
 import type { Message } from "@langchain/core/messages";
 
 const app = express();
@@ -18,10 +19,29 @@ app.listen(6000, () => {
 app.use(morgan("dev"));
 
 app.post("/chat", async (req, res) => {
-  const { input, servers } = req.body as {
-    input: string;
-    servers: string[];
-  };
+  const { credential, input, servers } = req.body as RequestChatBody;
+  if (!credential) {
+    return res.status(400).json({ error: "Missing credential" });
+  }
+  if (typeof credential.provider !== "string") {
+    return res.status(400).json({ error: "Invalid provider" });
+  }
+  if (!credential.provider) {
+    return res.status(400).json({ error: "Missing provider" });
+  }
+  if (
+    ["openai", "claude", "openrouter"].includes(credential.provider) &&
+    !credential.api_key
+  ) {
+    return res.status(400).json({ error: "Missing api key" });
+  }
+  if (
+    ["ollama", "llama_cpp", "vllm"].includes(credential.provider) &&
+    !credential.url
+  ) {
+    return res.status(400).json({ error: "Missing url" });
+  }
+
   if (!input) {
     return res.status(400).json({ error: "Missing body request" });
   }
@@ -30,7 +50,10 @@ app.post("/chat", async (req, res) => {
   }
 
   const availableServers = await checkServers(servers);
-  const agent = (await createAgent(availableServers)) as CompiledAgent;
+  const agent = (await createAgent(
+    credential,
+    availableServers,
+  )) as CompiledAgent;
   const result = await agent.invoke({ input });
   const messages = result.messages;
   const last_message = messages.at(-1);
